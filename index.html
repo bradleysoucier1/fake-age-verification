@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Age Verification</title>
+
+  <!-- MDC Web v14 -->
+
+  <link rel="stylesheet" href="https://unpkg.com/material-components-web@14.0.0/dist/material-components-web.min.css" />
+  <script src="https://unpkg.com/material-components-web@14.0.0/dist/material-components-web.min.js"></script>
+
+  <!-- Material Icons -->
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+  <!-- Roboto -->
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" />
+
+  <style>
+    /* ── M2 Colour Tokens ───────────────────────────────────────── */
+    :root {
+      --mdc-theme-primary: #5c6bc0;        /* Indigo 400 */
+      --mdc-theme-secondary: #ec407a;      /* Pink 400 */
+      --mdc-theme-on-primary: #ffffff;
+      --mdc-theme-on-secondary: #ffffff;
+      --mdc-theme-surface: #ffffff;
+      --mdc-theme-background: #f5f5f5;
+      --mdc-theme-on-surface: #212121;
+      --mdc-theme-text-primary-on-background: rgba(0,0,0,.87);
+      --mdc-theme-text-secondary-on-background: rgba(0,0,0,.54);
+
+      --color-primary: #5c6bc0;
+      --color-primary-dark: #3949ab;
+      --color-accent: #ec407a;
+      --color-error: #b00020;
+      --color-success: #388e3c;
+      --color-bg: #f5f5f5;
+      --color-surface: #ffffff;
+      --color-on-primary: #ffffff;
+      --elevation-2: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.12), 0 1px 5px 0 rgba(0,0,0,.20);
+      --elevation-6: 0 6px 10px 0 rgba(0,0,0,.14), 0 1px 18px 0 rgba(0,0,0,.12), 0 3px 5px -1px rgba(0,0,0,.20);
+    }
+
+    /* ── Reset / Base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%;
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--color-bg);
+      color: var(--mdc-theme-text-primary-on-background);
+    }
+
+    /* ── Top App Bar ────────────────────────────────────────────── */
+    .mdc-top-app-bar {
+      background-color: var(--color-primary);
+    }
+    .mdc-top-app-bar__title { font-weight: 500; letter-spacing: .0125em; }
+
+    /* ── Page Layout ────────────────────────────────────────────── */
+    .page-body {
+      padding-top: 64px; /* top-app-bar height */
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    .page-content {
+      width: 100%;
+      max-width: 480px;
+      padding: 32px 16px 48px;
+    }
+
+    /* ── Hero Section ───────────────────────────────────────────── */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .hero__icon-wrapper {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+      box-shadow: var(--elevation-6);
+    }
+    .hero__icon-wrapper .material-icons {
+      font-size: 40px;
+      color: #fff;
+    }
+    .hero__title {
+      margin: 0 0 8px;
+      font-size: 24px;
+      font-weight: 400;
+      letter-spacing: 0;
+      color: rgba(0,0,0,.87);
+    }
+    .hero__subtitle {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 20px;
+      color: rgba(0,0,0,.54);
+      max-width: 320px;
+    }
+
+    /* ── Card ───────────────────────────────────────────────────── */
+    .verify-card {
+      background: var(--color-surface);
+      border-radius: 4px;
+      box-shadow: var(--elevation-2);
+      padding: 24px 24px 20px;
+    }
+    .verify-card__section-label {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,.54);
+      margin: 0 0 20px;
+    }
+
+    /* ── Date Row ───────────────────────────────────────────────── */
+    .date-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .date-row--month { flex: 3; }
+    .date-row--day   { flex: 2; }
+    .date-row--year  { flex: 3; }
+    .date-row .mdc-text-field { width: 100%; }
+
+    /* MDC TextField overrides */
+    .mdc-text-field--focused:not(.mdc-text-field--disabled) .mdc-floating-label {
+      color: var(--color-primary) !important;
+    }
+    .mdc-text-field--focused:not(.mdc-text-field--disabled) .mdc-line-ripple::after {
+      border-bottom-color: var(--color-primary) !important;
+    }
+    .mdc-text-field:not(.mdc-text-field--disabled) .mdc-line-ripple::before {
+      border-bottom-color: rgba(0,0,0,.42);
+    }
+
+    /* ── Checkbox Row ───────────────────────────────────────────── */
+    .consent-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 24px;
+      margin-bottom: 4px;
+    }
+    .mdc-checkbox { flex-shrink: 0; margin-top: -10px; }
+    .consent-label {
+      font-size: 14px;
+      line-height: 20px;
+      color: rgba(0,0,0,.6);
+      padding-top: 2px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .consent-label a {
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+    .consent-label a:hover { text-decoration: underline; }
+
+    /* ── Helper / Error text ────────────────────────────────────── */
+    .mdc-text-field-helper-line { padding-left: 0; }
+    .field-error {
+      font-size: 12px;
+      color: var(--color-error);
+      margin-top: 4px;
+      min-height: 16px;
+      padding-left: 0;
+    }
+
+    /* ── Action Row ─────────────────────────────────────────────── */
+    .card-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 24px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(0,0,0,.12);
+    }
+    .mdc-button--raised { background-color: var(--color-primary) !important; }
+    .mdc-button--raised .mdc-button__label { color: #fff; }
+    .mdc-button--raised .mdc-button__ripple::before,
+    .mdc-button--raised .mdc-button__ripple::after { background-color: #fff; }
+
+    /* ── Result States ──────────────────────────────────────────── */
+    .result-card {
+      display: none;
+      background: var(--color-surface);
+      border-radius: 4px;
+      box-shadow: var(--elevation-2);
+      padding: 40px 24px 32px;
+      text-align: center;
+      animation: fadeUp .25s ease;
+    }
+    .result-card.visible { display: block; }
+    .result-card__icon {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+    }
+    .result-card__icon--success { background-color: #e8f5e9; }
+    .result-card__icon--error   { background-color: #fce4ec; }
+    .result-card__icon .material-icons { font-size: 44px; }
+    .result-card__icon--success .material-icons { color: var(--color-success); }
+    .result-card__icon--error   .material-icons { color: var(--color-error); }
+    .result-card__title {
+      font-size: 20px; font-weight: 500; margin: 0 0 12px;
+      color: rgba(0,0,0,.87);
+    }
+    .result-card__body {
+      font-size: 14px; line-height: 20px;
+      color: rgba(0,0,0,.54);
+      margin: 0 0 32px;
+    }
+    .result-card__badge {
+      display: inline-block;
+      border-radius: 4px;
+      padding: 6px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .badge--success { background: #e8f5e9; color: var(--color-success); }
+    .badge--error   { background: #fce4ec; color: var(--color-error); }
+
+    .result-actions { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .mdc-button--outlined .mdc-button__label { color: var(--color-primary); }
+    .mdc-button--outlined { border-color: var(--color-primary) !important; }
+
+    /* ── Divider ────────────────────────────────────────────────── */
+    .divider {
+      display: flex; align-items: center; gap: 16px;
+      margin: 28px 0 24px;
+    }
+    .divider__line { flex: 1; height: 1px; background: rgba(0,0,0,.12); }
+    .divider__text { font-size: 12px; color: rgba(0,0,0,.38); white-space: nowrap; }
+
+    /* ── Legal Note ─────────────────────────────────────────────── */
+    .legal-note {
+      margin-top: 20px;
+      font-size: 11px;
+      line-height: 16px;
+      color: rgba(0,0,0,.38);
+      text-align: center;
+    }
+
+    /* ── Snackbar ───────────────────────────────────────────────── */
+    .mdc-snackbar__surface {
+      background-color: #323232 !important;
+    }
+    .mdc-snackbar__label { color: rgba(255,255,255,.87) !important; }
+
+    /* ── Dialog overrides ───────────────────────────────────────── */
+    .mdc-dialog__title::before { height: 20px; }
+
+    /* ── Animations ─────────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .verify-card { animation: fadeUp .3s ease; }
+
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .page-content { padding: 24px 12px 40px; }
+      .verify-card, .result-card { padding: 20px 16px 16px; }
+    }
+  </style>
+
+</head>
+<body>
+
+<!-- ── Top App Bar ─────────────────────────────────────────────────── -->
+
+<header class="mdc-top-app-bar mdc-top-app-bar--fixed" id="app-bar">
+  <div class="mdc-top-app-bar__row">
+    <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+      <span class="mdc-top-app-bar__title">Age Verification</span>
+    </section>
+    <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end">
+      <button class="mdc-icon-button material-icons mdc-top-app-bar__action-item" aria-label="Help">help_outline</button>
+    </section>
+  </div>
+</header>
+
+<!-- ── Main Content ────────────────────────────────────────────────── -->
+
+<div class="page-body">
+  <main class="page-content" role="main">
+
+```
+<!-- Hero -->
+<div class="hero">
+  <div class="hero__icon-wrapper">
+    <span class="material-icons" aria-hidden="true">verified_user</span>
+  </div>
+  <h1 class="hero__title">Verify Your Age</h1>
+  <p class="hero__subtitle">This content is restricted to users 18 years of age or older. Please confirm your date of birth to continue.</p>
+</div>
+
+<!-- ── Verify Form Card ──────────────────────────────────────── -->
+<div class="verify-card" id="verify-card">
+  <p class="verify-card__section-label">Date of Birth</p>
+
+  <!-- Date Fields -->
+  <div class="date-row">
+    <div class="date-row--month">
+      <label class="mdc-text-field mdc-text-field--filled" id="tf-month">
+        <span class="mdc-text-field__ripple"></span>
+        <span class="mdc-floating-label" id="tf-month-label">Month</span>
+        <input class="mdc-text-field__input" type="number" min="1" max="12"
+               inputmode="numeric" aria-labelledby="tf-month-label"
+               id="input-month" autocomplete="off" />
+        <span class="mdc-line-ripple"></span>
+      </label>
+    </div>
+    <div class="date-row--day">
+      <label class="mdc-text-field mdc-text-field--filled" id="tf-day">
+        <span class="mdc-text-field__ripple"></span>
+        <span class="mdc-floating-label" id="tf-day-label">Day</span>
+        <input class="mdc-text-field__input" type="number" min="1" max="31"
+               inputmode="numeric" aria-labelledby="tf-day-label"
+               id="input-day" autocomplete="off" />
+        <span class="mdc-line-ripple"></span>
+      </label>
+    </div>
+    <div class="date-row--year">
+      <label class="mdc-text-field mdc-text-field--filled" id="tf-year">
+        <span class="mdc-text-field__ripple"></span>
+        <span class="mdc-floating-label" id="tf-year-label">Year</span>
+        <input class="mdc-text-field__input" type="number" min="1900" max="2099"
+               inputmode="numeric" aria-labelledby="tf-year-label"
+               id="input-year" autocomplete="off" />
+        <span class="mdc-line-ripple"></span>
+      </label>
+    </div>
+  </div>
+  <p class="field-error" id="date-error" role="alert" aria-live="polite"></p>
+
+  <!-- Divider -->
+  <div class="divider">
+    <span class="divider__line"></span>
+    <span class="divider__text">CONSENT</span>
+    <span class="divider__line"></span>
+  </div>
+
+  <!-- Consent Checkbox -->
+  <div class="consent-row">
+    <div class="mdc-checkbox" id="cb-consent">
+      <input type="checkbox" class="mdc-checkbox__native-control" id="consent-input" />
+      <div class="mdc-checkbox__background">
+        <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
+          <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+        </svg>
+        <div class="mdc-checkbox__mixedmark"></div>
+      </div>
+      <div class="mdc-checkbox__ripple"></div>
+    </div>
+    <label class="consent-label" for="consent-input">
+      I confirm that the information I have provided is accurate and I agree to the
+      <a href="#" onclick="return false">Terms of Service</a> and
+      <a href="#" onclick="return false">Privacy Policy</a>.
+    </label>
+  </div>
+  <p class="field-error" id="consent-error" role="alert" aria-live="polite"></p>
+
+  <!-- Actions -->
+  <div class="card-actions">
+    <button class="mdc-button mdc-button--outlined" id="btn-clear">
+      <span class="mdc-button__ripple"></span>
+      <span class="mdc-button__label">Clear</span>
+    </button>
+    <button class="mdc-button mdc-button--raised" id="btn-verify">
+      <span class="mdc-button__ripple"></span>
+      <span class="mdc-button__label">Verify Age</span>
+    </button>
+  </div>
+</div>
+
+<!-- ── Success Result Card ───────────────────────────────────── -->
+<div class="result-card" id="result-success" role="region" aria-label="Verification result">
+  <div class="result-card__icon result-card__icon--success" aria-hidden="true">
+    <span class="material-icons">check_circle</span>
+  </div>
+  <span class="result-card__badge badge--success">Access Granted</span>
+  <h2 class="result-card__title">Age Verified Successfully</h2>
+  <p class="result-card__body" id="success-body"></p>
+  <div class="result-actions">
+    <button class="mdc-button mdc-button--raised" id="btn-continue">
+      <span class="mdc-button__ripple"></span>
+      <span class="mdc-button__label">Continue</span>
+    </button>
+  </div>
+</div>
+
+<!-- ── Denied Result Card ────────────────────────────────────── -->
+<div class="result-card" id="result-denied" role="region" aria-label="Verification result">
+  <div class="result-card__icon result-card__icon--error" aria-hidden="true">
+    <span class="material-icons">cancel</span>
+  </div>
+  <span class="result-card__badge badge--error">Access Denied</span>
+  <h2 class="result-card__title">Age Requirement Not Met</h2>
+  <p class="result-card__body">You must be 18 years of age or older to access this content. If you believe this is an error, please contact support.</p>
+  <div class="result-actions">
+    <button class="mdc-button mdc-button--outlined" id="btn-retry">
+      <span class="mdc-button__ripple"></span>
+      <span class="mdc-button__label">Try Again</span>
+    </button>
+  </div>
+</div>
+
+<!-- Legal Note -->
+<p class="legal-note">
+  Your date of birth is used solely for age verification and is not stored on our servers.
+  This process complies with applicable regulations.
+</p>
+```
+
+  </main>
+</div>
+
+<!-- ── Snackbar ────────────────────────────────────────────────────── -->
+
+<div class="mdc-snackbar" id="snackbar">
+  <div class="mdc-snackbar__surface" role="status" aria-relevant="additions">
+    <div class="mdc-snackbar__label" aria-atomic="false" id="snackbar-label"></div>
+    <div class="mdc-snackbar__actions" aria-atomic="true">
+      <button type="button" class="mdc-button mdc-snackbar__action">
+        <div class="mdc-button__ripple"></div>
+        <span class="mdc-button__label">Dismiss</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── "Continue" Dialog ───────────────────────────────────────────── -->
+
+<div class="mdc-dialog" id="continue-dialog" role="dialog" aria-modal="true"
+     aria-labelledby="dialog-title" aria-describedby="dialog-content">
+  <div class="mdc-dialog__container">
+    <div class="mdc-dialog__surface">
+      <h2 class="mdc-dialog__title" id="dialog-title">Welcome!</h2>
+      <div class="mdc-dialog__content" id="dialog-content">
+        Your identity has been verified. You now have full access to all age-restricted content on this platform. Enjoy your experience.
+      </div>
+      <div class="mdc-dialog__actions">
+        <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
+          <div class="mdc-button__ripple"></div>
+          <span class="mdc-button__label">Got It</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="mdc-dialog__scrim"></div>
+</div>
+
+<script>
+  // ── Initialise MDC Components ──────────────────────────────────
+  const topAppBar  = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-bar'));
+  const tfMonth    = new mdc.textField.MDCTextField(document.getElementById('tf-month'));
+  const tfDay      = new mdc.textField.MDCTextField(document.getElementById('tf-day'));
+  const tfYear     = new mdc.textField.MDCTextField(document.getElementById('tf-year'));
+  const checkbox   = new mdc.checkbox.MDCCheckbox(document.getElementById('cb-consent'));
+  const snackbar   = new mdc.snackbar.MDCSnackbar(document.getElementById('snackbar'));
+  const dialog     = new mdc.dialog.MDCDialog(document.getElementById('continue-dialog'));
+
+  new mdc.ripple.MDCRipple(document.getElementById('btn-verify'));
+  new mdc.ripple.MDCRipple(document.getElementById('btn-clear'));
+  new mdc.ripple.MDCRipple(document.getElementById('btn-continue'));
+  new mdc.ripple.MDCRipple(document.getElementById('btn-retry'));
+
+  // ── Helpers ────────────────────────────────────────────────────
+  function showSnack(msg) {
+    document.getElementById('snackbar-label').textContent = msg;
+    snackbar.open();
+  }
+
+  function clearErrors() {
+    document.getElementById('date-error').textContent = '';
+    document.getElementById('consent-error').textContent = '';
+    tfMonth.valid = true;
+    tfDay.valid   = true;
+    tfYear.valid  = true;
+  }
+
+  function resetForm() {
+    tfMonth.value = '';
+    tfDay.value   = '';
+    tfYear.value  = '';
+    checkbox.checked = false;
+    clearErrors();
+    // Re-float labels back down
+    [tfMonth, tfDay, tfYear].forEach(tf => tf.layout());
+  }
+
+  function showCard(id) {
+    ['verify-card','result-success','result-denied'].forEach(c => {
+      const el = document.getElementById(c);
+      el.style.display = 'none';
+      el.classList.remove('visible');
+    });
+    const target = document.getElementById(id);
+    target.style.display = 'block';
+    target.classList.add('visible');
+  }
+
+  // ── Validation ─────────────────────────────────────────────────
+  function validate() {
+    clearErrors();
+    let valid = true;
+
+    const monthVal = parseInt(tfMonth.value, 10);
+    const dayVal   = parseInt(tfDay.value,   10);
+    const yearVal  = parseInt(tfYear.value,  10);
+
+    const now = new Date();
+
+    if (!tfMonth.value || isNaN(monthVal) || monthVal < 1 || monthVal > 12) {
+      tfMonth.valid = false; valid = false;
+    }
+    if (!tfDay.value || isNaN(dayVal) || dayVal < 1 || dayVal > 31) {
+      tfDay.valid = false; valid = false;
+    }
+    const currentYear = now.getFullYear();
+    if (!tfYear.value || isNaN(yearVal) || yearVal < 1900 || yearVal > currentYear) {
+      tfYear.valid = false; valid = false;
+    }
+
+    if (!valid) {
+      document.getElementById('date-error').textContent =
+        'Please enter a valid date of birth.';
+      return null;
+    }
+
+    // Check the date is real
+    const dob = new Date(yearVal, monthVal - 1, dayVal);
+    if (dob.getMonth() !== monthVal - 1) {
+      tfDay.valid = false;
+      document.getElementById('date-error').textContent =
+        'The day you entered is invalid for this month.';
+      return null;
+    }
+    if (dob > now) {
+      document.getElementById('date-error').textContent =
+        'Date of birth cannot be in the future.';
+      [tfMonth, tfDay, tfYear].forEach(tf => tf.valid = false);
+      return null;
+    }
+
+    if (!checkbox.checked) {
+      document.getElementById('consent-error').textContent =
+        'You must agree to the Terms of Service to continue.';
+      return null;
+    }
+
+    return dob;
+  }
+
+  function calculateAge(dob) {
+    const now = new Date();
+    let age = now.getFullYear() - dob.getFullYear();
+    const m = now.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+    return age;
+  }
+
+  // ── Event Handlers ─────────────────────────────────────────────
+  document.getElementById('btn-verify').addEventListener('click', () => {
+    const dob = validate();
+    if (!dob) return;
+
+    const age = calculateAge(dob);
+
+    if (age >= 18) {
+      document.getElementById('success-body').textContent =
+        `We've confirmed you are ${age} years old. You have been granted full access to all age-restricted content.`;
+      showCard('result-success');
+    } else {
+      showCard('result-denied');
+    }
+  });
+
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    resetForm();
+    showCard('verify-card');
+    showSnack('Form cleared');
+  });
+
+  document.getElementById('btn-continue').addEventListener('click', () => {
+    dialog.open();
+  });
+
+  document.getElementById('btn-retry').addEventListener('click', () => {
+    resetForm();
+    showCard('verify-card');
+  });
+
+  // Auto-advance: Month → Day → Year
+  document.getElementById('input-month').addEventListener('input', e => {
+    if (e.target.value.length >= 2) document.getElementById('input-day').focus();
+  });
+  document.getElementById('input-day').addEventListener('input', e => {
+    if (e.target.value.length >= 2) document.getElementById('input-year').focus();
+  });
+
+  // Initialise display
+  showCard('verify-card');
+</script>
+
+</body>
+</html>
