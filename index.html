@@ -137,6 +137,11 @@
     .date-row--year  { flex: 3; }
     .date-row .mdc-text-field { width: 100%; }
 
+    /* Hide native number-input spinners */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+
     /* MDC TextField overrides */
     .mdc-text-field--focused:not(.mdc-text-field--disabled) .mdc-floating-label {
       color: var(--color-primary) !important;
@@ -203,7 +208,6 @@
       box-shadow: var(--elevation-2);
       padding: 40px 24px 32px;
       text-align: center;
-      animation: fadeUp .25s ease;
     }
     .result-card.visible { display: block; }
     .result-card__icon {
@@ -298,6 +302,8 @@
       to   { opacity: 1; transform: translateY(0); }
     }
     .verify-card { animation: fadeUp .3s ease; }
+    /* Animate result cards only when made visible, not on initial parse */
+    .result-card.visible { animation: fadeUp .25s ease; }
 
     /* ── Responsive ─────────────────────────────────────────────── */
     @media (max-width: 480px) {
@@ -387,22 +393,24 @@
   </div>
 
   <!-- Consent Checkbox -->
-  <div class="consent-row">
-    <div class="mdc-checkbox" id="cb-consent">
-      <input type="checkbox" class="mdc-checkbox__native-control" id="consent-input" />
-      <div class="mdc-checkbox__background">
-        <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
-          <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
-        </svg>
-        <div class="mdc-checkbox__mixedmark"></div>
+  <div class="mdc-form-field" id="ff-consent">
+    <div class="consent-row">
+      <div class="mdc-checkbox" id="cb-consent">
+        <input type="checkbox" class="mdc-checkbox__native-control" id="consent-input" />
+        <div class="mdc-checkbox__background">
+          <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
+            <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+          </svg>
+          <div class="mdc-checkbox__mixedmark"></div>
+        </div>
+        <div class="mdc-checkbox__ripple"></div>
       </div>
-      <div class="mdc-checkbox__ripple"></div>
+      <label class="consent-label" for="consent-input">
+        I confirm that the information I have provided is accurate and I agree to the
+        <a href="#" class="tos-link">Terms of Service</a> and
+        <a href="#" class="pp-link">Privacy Policy</a>.
+      </label>
     </div>
-    <label class="consent-label" for="consent-input">
-      I confirm that the information I have provided is accurate and I agree to the
-      <a href="#" class="tos-link" onclick="return false">Terms of Service</a> and
-      <a href="#" class="pp-link" onclick="return false">Privacy Policy</a>.
-    </label>
   </div>
   <p class="field-error" id="consent-error" role="alert" aria-live="polite"></p>
 
@@ -442,7 +450,7 @@
   </div>
   <span class="result-card__badge badge--error">Access Denied</span>
   <h2 class="result-card__title">Age Requirement Not Met</h2>
-  <p class="result-card__body">You must be 18 years of age or older to access this content. If you believe this is an error, please <a href="#" class="support-link contact-support-link" onclick="return false">contact support</a>.</p>
+  <p class="result-card__body">You must be 18 years of age or older to access this content. If you believe this is an error, please <a href="#" class="support-link contact-support-link">contact support</a>.</p>
   <div class="result-actions">
     <button class="mdc-button mdc-button--outlined" id="btn-retry">
       <span class="mdc-button__ripple"></span>
@@ -635,12 +643,20 @@
   const tosDialog     = new mdc.dialog.MDCDialog(document.getElementById('tos-dialog'));
   const ppDialog      = new mdc.dialog.MDCDialog(document.getElementById('pp-dialog'));
   const supportDialog = new mdc.dialog.MDCDialog(document.getElementById('support-dialog'));
-  const helpBtn       = new mdc.iconButton.MDCIconButton(document.getElementById('btn-help'));
 
-  new mdc.ripple.MDCRipple(document.getElementById('btn-verify'));
-  new mdc.ripple.MDCRipple(document.getElementById('btn-clear'));
-  new mdc.ripple.MDCRipple(document.getElementById('btn-continue'));
-  new mdc.ripple.MDCRipple(document.getElementById('btn-retry'));
+  // MDCFormField wires the label click → checkbox ripple (Bug 3 fix)
+  const formField = new mdc.formField.MDCFormField(document.getElementById('ff-consent'));
+  formField.input = checkbox;
+
+  // MDCButton (not MDCRipple) for mdc-button elements (Bug 2 fix)
+  new mdc.button.MDCButton(document.getElementById('btn-verify'));
+  new mdc.button.MDCButton(document.getElementById('btn-clear'));
+  new mdc.button.MDCButton(document.getElementById('btn-continue'));
+  new mdc.button.MDCButton(document.getElementById('btn-retry'));
+
+  // MDCRipple (not MDCIconButton) for a simple action icon button (Bug 1 fix)
+  const helpRipple = new mdc.ripple.MDCRipple(document.getElementById('btn-help'));
+  helpRipple.unbounded = true;
 
   // ── Helpers ────────────────────────────────────────────────────
   function showSnack(msg) {
@@ -674,6 +690,8 @@
     });
     const target = document.getElementById(id);
     target.style.display = 'block';
+    // Force a reflow before re-adding .visible so the animation always replays
+    void target.offsetWidth;
     target.classList.add('visible');
   }
 
